@@ -6,7 +6,7 @@ from core.exeptions import VoiceProcessingError
 class VoiceService:
     @staticmethod
     async def download_voice_file(file_id: str, bot) -> str:
-        """Скачивание голосового сообщения"""
+        
         try:
             file = await bot.get_file(file_id)
             file_path = file.file_path
@@ -25,7 +25,7 @@ class VoiceService:
     
     @staticmethod
     async def save_audio_response(audio_data, user_id: int) -> str:
-        """Сохранение аудио ответа"""
+        
         try:
             os.makedirs("temp", exist_ok=True)
             output_path = f"temp/response_{user_id}.mp3"
@@ -46,7 +46,7 @@ class VoiceService:
     
     @staticmethod
     def cleanup_files(*file_paths):
-        """Очистка временных файлов"""
+        
         for file_path in file_paths:
             try:
                 if os.path.exists(file_path):
