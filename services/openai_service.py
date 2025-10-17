@@ -15,7 +15,7 @@ class OpenAIService:
         self._initialize_client()
     
     def _initialize_client(self):
-        """Инициализация клиента OpenAI с проверками"""
+        
         try:
             logger.info(" Инициализация OpenAI клиента...")
             
@@ -39,20 +39,20 @@ class OpenAIService:
     
     @property
     def client(self):
-        """Геттер для клиента с проверкой инициализации"""
+       
         if self._client is None:
             self._initialize_client()
         return self._client
     
     @property
     def assistant_id(self):
-        """Геттер для assistant_id с проверкой"""
+        
         if self._assistant_id is None:
             self._assistant_id = settings.assistant_id
         return self._assistant_id
     
     async def transcribe_audio(self, audio_file_path: str) -> str:
-        """Транскрибация голосового сообщения в текст"""
+        
         try:
             logger.info(f" Начинаем транскрибацию файла: {audio_file_path}")
             
@@ -74,7 +74,7 @@ class OpenAIService:
             raise VoiceProcessingError(f"Ошибка транскрибации: {str(e)}")
     
     async def get_assistant_response(self, message: str, thread_id: Optional[str] = None) -> tuple[str, str]:
-        """Получение ответа от Assistant API"""
+       
         try:
             logger.info(f" Запрос к ассистенту: {message[:50]}...")
             
@@ -137,7 +137,7 @@ class OpenAIService:
             raise AssistantError(f"Ошибка Assistant API: {str(e)}")
     
     async def text_to_speech(self, text: str, output_path: str) -> None:
-        """Преобразование текста в речь"""
+        
         try:
             logger.info(f" Создание аудио из текста: {text[:50]}...")
             
