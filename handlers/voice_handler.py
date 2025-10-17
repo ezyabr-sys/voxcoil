@@ -124,7 +124,7 @@ async def handle_voice_message(message: Message):
                 with open(audio_response_path, 'rb') as audio_file:
                     await message.reply_voice(
                         voice=audio_file,
-                        caption="🎧 Аудио ответ:"
+                        caption=" Аудио ответ:"
                     )
                 await processing_msg.delete()
             else:
@@ -159,7 +159,7 @@ async def handle_voice_message(message: Message):
 
 @router.message(F.text)
 async def handle_text_message(message: Message):
-    """Обработка текстовых сообщений"""
+   
     openai_service = get_openai_service()
     
     if openai_service is None:
