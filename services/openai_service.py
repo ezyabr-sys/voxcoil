@@ -4,7 +4,7 @@ from core.config import settings
 from core.exeptions import AssistantError, VoiceProcessingError
 import logging
 import os
-from typing import Optional
+from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,14 +19,8 @@ class OpenAIService:
         try:
             logger.info(" Инициализация OpenAI клиента...")
             
-            
             if not settings.openai_api_key:
                 raise ValueError("OPENAI_API_KEY не найден в настройках")
-            
-            
-            if not settings.openai_api_key.startswith('sk-'):
-                raise ValueError(f"Неверный формат OPENAI_API_KEY: {settings.openai_api_key[:20]}...")
-            
             
             self._client = AsyncOpenAI(api_key=settings.openai_api_key)
             self._assistant_id = settings.assistant_id
@@ -39,14 +33,12 @@ class OpenAIService:
     
     @property
     def client(self):
-        """Геттер для клиента с проверкой инициализации"""
         if self._client is None:
             self._initialize_client()
         return self._client
     
     @property
     def assistant_id(self):
-        """Геттер для assistant_id с проверкой"""
         if self._assistant_id is None:
             self._assistant_id = settings.assistant_id
         return self._assistant_id
@@ -73,19 +65,16 @@ class OpenAIService:
             logger.error(f" Ошибка транскрибации: {e}")
             raise VoiceProcessingError(f"Ошибка транскрибации: {str(e)}")
     
-    async def get_assistant_response(self, message: str, thread_id: Optional[str] = None) -> tuple[str, str]:
-        """Получение ответа от Assistant API"""
+    async def get_assistant_response(self, message: str, thread_id: Optional[str] = None) -> tuple[str, str, Dict[str, Any]]:
+        """Получение ответа от Assistant API с информацией об источниках"""
         try:
             logger.info(f" Запрос к ассистенту: {message[:50]}...")
             
-            
+           
             if not thread_id:
                 thread = await self.client.beta.threads.create()
                 thread_id = thread.id
                 logger.info(f" Создан новый тред: {thread_id}")
-            else:
-                thread = await self.client.beta.threads.retrieve(thread_id)
-                logger.info(f" Используем существующий тред: {thread_id}")
             
             
             await self.client.beta.threads.messages.create(
@@ -97,21 +86,21 @@ class OpenAIService:
             
             run = await self.client.beta.threads.runs.create(
                 thread_id=thread_id,
-                assistant_id=self.assistant_id)
+                assistant_id=self.assistant_id
+            )
             logger.info(f" Запущен процесс ассистента: {run.id}, статус: {run.status}")
             
             
-            import asyncio
             while run.status in ["queued", "in_progress"]:
+                import asyncio
                 await asyncio.sleep(1)
                 run = await self.client.beta.threads.runs.retrieve(
                     thread_id=thread_id,
                     run_id=run.id
                 )
                 logger.info(f" Статус процесса: {run.status}")
-            
             if run.status == "completed":
-                
+               
                 messages = await self.client.beta.threads.messages.list(
                     thread_id=thread_id
                 )
@@ -125,8 +114,21 @@ class OpenAIService:
                 if assistant_messages:
                     latest_message = assistant_messages[0]
                     response_text = latest_message.content[0].text.value
+                    
+                   
+                    file_citations = []
+                    if hasattr(latest_message.content[0].text, 'annotations'):
+                        for annotation in latest_message.content[0].text.annotations:
+                            if hasattr(annotation, 'file_citation'):
+                                file_citations.append({
+                                    'file_id': annotation.file_citation.file_id,
+                                    'quote': annotation.file_citation.quote
+                                })
+                    
                     logger.info(f" Получен ответ от ассистента: {response_text[:50]}...")
-                    return response_text, thread_id
+                    logger.info(f" Использовано цитат из файлов: {len(file_citations)}")
+                    
+                    return response_text, thread_id, {'file_citations': file_citations}
                 else:
                     raise AssistantError("Ассистент не вернул сообщение")
             else:

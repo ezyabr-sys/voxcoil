@@ -1,6 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import Message, Voice
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from services.openai_service import OpenAIService
 from services.voice_service import VoiceService
 from core.exeptions import OpenAIServiceError
@@ -67,8 +68,9 @@ async def cmd_test(message: Message):
     except Exception as e:
         await message.answer(f" Ошибка тестирования: {str(e)}")
 
+
 @router.message(F.voice | F.audio | F.document)
-async def handle_voice_message(message: Message):
+async def handle_voice_message(message: Message, state: FSMContext):
     """Обработка голосовых сообщений"""
     user_id = message.from_user.id
     
@@ -103,7 +105,16 @@ async def handle_voice_message(message: Message):
         
         await processing_msg.edit_text(f" Ваш вопрос: {user_text}\n\n Формирую ответ...")
         
-        assistant_response, thread_id = await openai_service.get_assistant_response(user_text)
+       
+        assistant_response, thread_id, response_metadata = await openai_service.get_assistant_response(user_text)
+        
+        
+        await state.update_data(thread_id=thread_id)
+        
+        
+        if response_metadata.get('file_citations'):
+            citations_info = f"\n\n Источники: использовано {len(response_metadata['file_citations'])} цитат из документа"
+            assistant_response += citations_info
         
         
         if len(assistant_response) > 4096:
@@ -119,7 +130,7 @@ async def handle_voice_message(message: Message):
             
             await openai_service.text_to_speech(assistant_response, audio_response_path)
             
-            
+           
             if os.path.exists(audio_response_path) and os.path.getsize(audio_response_path) > 0:
                 with open(audio_response_path, 'rb') as audio_file:
                     await message.reply_voice(
@@ -141,7 +152,7 @@ async def handle_voice_message(message: Message):
             await processing_msg.edit_text(
                 f" Ваш вопрос: {user_text}\n\n"
                 f" Ответ: {assistant_response}\n\n"
-                f" Аудио ответ временно недоступен в вашем регионе"
+                f" Аудио ответ временно недоступен"
             )
         
     except OpenAIServiceError as e:
@@ -158,7 +169,7 @@ async def handle_voice_message(message: Message):
             voice_service.cleanup_files(voice_path, audio_response_path)
 
 @router.message(F.text)
-async def handle_text_message(message: Message):
+async def handle_text_message(message: Message, state: FSMContext):
     """Обработка текстовых сообщений"""
     openai_service = get_openai_service()
     
@@ -168,7 +179,18 @@ async def handle_text_message(message: Message):
     
     try:
         processing_msg = await message.reply(" Обрабатываю текстовое сообщение...")
-        assistant_response, thread_id = await openai_service.get_assistant_response(message.text)
+        
+        
+        assistant_response, thread_id, response_metadata = await openai_service.get_assistant_response(message.text)
+        
+        
+        await state.update_data(thread_id=thread_id)
+        
+        
+        if response_metadata.get('file_citations'):
+            citations_info = f"\n\n Источники: использовано {len(response_metadata['file_citations'])} цитат из документа"
+            assistant_response += citations_info
+        
         await processing_msg.edit_text(f" Ответ: {assistant_response}")
         
     except OpenAIServiceError as e:
