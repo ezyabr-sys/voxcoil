@@ -15,7 +15,7 @@ class OpenAIService:
         self._initialize_client()
     
     def _initialize_client(self):
-        """Инициализация клиента OpenAI с проверками"""
+        
         try:
             logger.info(" Инициализация OpenAI клиента...")
             
@@ -33,18 +33,26 @@ class OpenAIService:
     
     @property
     def client(self):
+<<<<<<< HEAD
+=======
+       
+>>>>>>> 4560863a39e9d12190037f91d894d04e36fecce2
         if self._client is None:
             self._initialize_client()
         return self._client
     
     @property
     def assistant_id(self):
+<<<<<<< HEAD
+=======
+        
+>>>>>>> 4560863a39e9d12190037f91d894d04e36fecce2
         if self._assistant_id is None:
             self._assistant_id = settings.assistant_id
         return self._assistant_id
     
     async def transcribe_audio(self, audio_file_path: str) -> str:
-        """Транскрибация голосового сообщения в текст"""
+        
         try:
             logger.info(f" Начинаем транскрибацию файла: {audio_file_path}")
             
@@ -65,8 +73,13 @@ class OpenAIService:
             logger.error(f" Ошибка транскрибации: {e}")
             raise VoiceProcessingError(f"Ошибка транскрибации: {str(e)}")
     
+<<<<<<< HEAD
     async def get_assistant_response(self, message: str, thread_id: Optional[str] = None) -> tuple[str, str, Dict[str, Any]]:
         """Получение ответа от Assistant API с информацией об источниках"""
+=======
+    async def get_assistant_response(self, message: str, thread_id: Optional[str] = None) -> tuple[str, str]:
+       
+>>>>>>> 4560863a39e9d12190037f91d894d04e36fecce2
         try:
             logger.info(f" Запрос к ассистенту: {message[:50]}...")
             
@@ -139,7 +152,7 @@ class OpenAIService:
             raise AssistantError(f"Ошибка Assistant API: {str(e)}")
     
     async def text_to_speech(self, text: str, output_path: str) -> None:
-        """Преобразование текста в речь"""
+        
         try:
             logger.info(f" Создание аудио из текста: {text[:50]}...")
             

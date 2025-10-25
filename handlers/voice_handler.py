@@ -12,7 +12,7 @@ router = Router()
 logger = logging.getLogger(__name__)
 
 def get_openai_service():
-    """Создание сервиса OpenAI с обработкой ошибок"""
+    
     try:
         service = OpenAIService()
         
@@ -27,12 +27,12 @@ def get_openai_service():
         return None
 
 def get_voice_service():
-    """Создание сервиса для работы с голосовыми сообщениями"""
+    
     return VoiceService()
 
 @router.message(Command("start"))
 async def cmd_start(message: Message):
-    """Обработчик команды /start"""
+   
     await message.answer(
         " Голосовой ассистент готов к работе!\n\n"
         "Просто отправьте голосовое сообщение или текст, "
@@ -41,7 +41,7 @@ async def cmd_start(message: Message):
 
 @router.message(Command("help"))
 async def cmd_help(message: Message):
-    """Обработчик команды /help"""
+    
     await message.answer(
         " Помощь по боту:\n\n"
         "• Отправьте голосовое сообщение - я преобразую его в текст, "
@@ -52,7 +52,7 @@ async def cmd_help(message: Message):
 
 @router.message(Command("test"))
 async def cmd_test(message: Message):
-    """Команда для тестирования сервиса OpenAI"""
+   
     try:
         service = get_openai_service()
         if service is None:
@@ -70,8 +70,13 @@ async def cmd_test(message: Message):
 
 
 @router.message(F.voice | F.audio | F.document)
+<<<<<<< HEAD
 async def handle_voice_message(message: Message, state: FSMContext):
     """Обработка голосовых сообщений"""
+=======
+async def handle_voice_message(message: Message):
+    
+>>>>>>> 4560863a39e9d12190037f91d894d04e36fecce2
     user_id = message.from_user.id
     
     openai_service = get_openai_service()
@@ -135,7 +140,7 @@ async def handle_voice_message(message: Message, state: FSMContext):
                 with open(audio_response_path, 'rb') as audio_file:
                     await message.reply_voice(
                         voice=audio_file,
-                        caption="🎧 Аудио ответ:"
+                        caption=" Аудио ответ:"
                     )
                 await processing_msg.delete()
             else:
@@ -169,8 +174,13 @@ async def handle_voice_message(message: Message, state: FSMContext):
             voice_service.cleanup_files(voice_path, audio_response_path)
 
 @router.message(F.text)
+<<<<<<< HEAD
 async def handle_text_message(message: Message, state: FSMContext):
     """Обработка текстовых сообщений"""
+=======
+async def handle_text_message(message: Message):
+   
+>>>>>>> 4560863a39e9d12190037f91d894d04e36fecce2
     openai_service = get_openai_service()
     
     if openai_service is None:
